@@ -1,6 +1,7 @@
 class HTMLNode():
     def __init__(self, tag: str = None, value: str = None, children: list = None, props: dict[str, str] = None):
         self.tag = tag
+        self.full_tag = (f"<{self.tag}>", f"</{self.tag}>") # e.g. (<p>, </p>)
         self.value = value
         self.children = children
         self.props = props
