@@ -7,19 +7,18 @@ class HTMLNode:
         props: dict[str, str] | None = None,
     ):
         self.tag = tag
-        self.full_tag = (f"<{self.tag}>", f"</{self.tag}>")  # e.g. (<p>, </p>)
         self.value = value
         self.children = children
         self.props = props
 
     def to_html(self):
-        raise NotImplementedError
+        raise NotImplementedError("to_html() method not implemented")
 
     def props_to_html(self):
         output = ""
         if self.props:
             for key, value in self.props.items():
-                output += f"{key}={value} "
+                output += f' {key}="{value}"'
         return output
 
     def __repr__(self):
