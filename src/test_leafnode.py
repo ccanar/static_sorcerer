@@ -1,6 +1,7 @@
 import unittest
 
-from leafnode import LeafNode
+from leafnode import LeafNode, text_node_to_html_node
+from textnode import TextNode, TextType
 
 
 class TestLeafNode(unittest.TestCase):
@@ -33,7 +34,14 @@ class TestLeafNode(unittest.TestCase):
             '<img src="img_test.jpg" alt="Test image" width="500" height="600" />',
         )
 
+    def test_text_node_to_html_node(self):
+        text_node1 = TextNode("Normal text", TextType.NORMAL)
+        html_node1 = text_node_to_html_node(text_node1)
+        self.assertEqual(html_node1.tag, None)
+        self.assertEqual(html_node1.value, "Normal text")
+        self.assertEqual(html_node1.children, None)
+        self.assertEqual(html_node1.props, None)
+
 
 if __name__ == "__main__":
     unittest.main()
-

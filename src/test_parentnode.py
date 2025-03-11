@@ -1,4 +1,5 @@
 import unittest
+
 from parentnode import ParentNode
 from leafnode import LeafNode
 
@@ -29,4 +30,3 @@ class TestParentNode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
