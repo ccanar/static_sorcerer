@@ -58,3 +58,29 @@ def text_node_to_html_node(text_node: TextNode):
                 )
             else:
                 raise Exception("url is None")
+
+
+def split_nodes_delimeter(
+    old_nodes: list[TextNode], delimeter: str, text_type: TextType
+) -> list[TextNode]:
+    result = []
+    for node in old_nodes:
+        if node.text_type != TextType.NORMAL:
+            result.append(node)
+            continue
+        if node.text.count(delimeter) == 0:
+            result.append(TextNode(node.text, TextType.NORMAL))
+            continue
+        if node.text.count(delimeter) % 2 != 0:
+            raise Exception("No matching closing delimeter")
+        split_at_delimeter = node.text.split(delimeter)
+        for i in range(len(split_at_delimeter)):
+            if split_at_delimeter[i] == "":
+                continue
+            if i == 0 or i % 2 == 0:
+                result.append(TextNode(split_at_delimeter[i], TextType.NORMAL))
+            # if i % 2 == 0:
+            # result.append(TextNode(split_at_delimeter[i], TextType.NORMAL))
+            else:
+                result.append(TextNode(split_at_delimeter[i], text_type))
+    return result

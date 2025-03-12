@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType, split_nodes_delimeter, text_node_to_html_node
 
 
 class TestTextNode(unittest.TestCase):
@@ -51,6 +51,75 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(html_node1.value, "Normal text")
         self.assertEqual(html_node1.children, None)
         self.assertEqual(html_node1.props, None)
+
+    def test_split_nodes_delimeter(self):
+        empty_list = []
+        new_list = split_nodes_delimeter(empty_list, "`", TextType.CODE)
+        self.assertEqual(new_list, [])
+
+        list1 = [TextNode("Text with no delimeter", TextType.NORMAL)]
+        new_list2 = split_nodes_delimeter(list1, "`", TextType.CODE)
+        self.assertEqual(
+            new_list2, [TextNode("Text with no delimeter", TextType.NORMAL)]
+        )
+        list2 = [TextNode("THIS WAS BOLD", TextType.BOLD)]
+        new_list3 = split_nodes_delimeter(list2, "`", TextType.CODE)
+        self.assertEqual(new_list3, [TextNode("THIS WAS BOLD", TextType.BOLD)])
+
+        list3 = [
+            TextNode("THIS WAS BOLD", TextType.BOLD),
+            TextNode("This has **bold** text.", TextType.NORMAL),
+        ]
+        new_list4 = split_nodes_delimeter(list3, "**", TextType.BOLD)
+        self.assertEqual(
+            new_list4,
+            [
+                TextNode("THIS WAS BOLD", TextType.BOLD),
+                TextNode("This has ", TextType.NORMAL),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" text.", TextType.NORMAL),
+            ],
+        )
+
+        list4 = [
+            TextNode("THIS WAS BOLD", TextType.BOLD),
+            TextNode("This has **bold** text and some `code, too`.", TextType.NORMAL),
+            TextNode("some code", TextType.CODE),
+            TextNode("**b** ale i `c`", TextType.NORMAL),
+        ]
+        new_list5 = split_nodes_delimeter(list4, "**", TextType.BOLD)
+        self.assertEqual(
+            new_list5,
+            [
+                TextNode("THIS WAS BOLD", TextType.BOLD),
+                TextNode("This has ", TextType.NORMAL),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" text and some `code, too`.", TextType.NORMAL),
+                TextNode("some code", TextType.CODE),
+                TextNode("b", TextType.BOLD),
+                TextNode(" ale i `c`", TextType.NORMAL),
+            ],
+        )
+
+        list5 = [
+            TextNode("THIS WAS BOLD", TextType.BOLD),
+            TextNode("This has **bold** text and some `code, too`.", TextType.NORMAL),
+            TextNode("some code", TextType.CODE),
+            TextNode("**b** ale i `c`", TextType.NORMAL),
+        ]
+        new_list6 = split_nodes_delimeter(list5, "`", TextType.CODE)
+        self.assertEqual(
+            new_list6,
+            [
+                TextNode("THIS WAS BOLD", TextType.BOLD),
+                TextNode("This has **bold** text and some ", TextType.NORMAL),
+                TextNode("code, too", TextType.CODE),
+                TextNode(".", TextType.NORMAL),
+                TextNode("some code", TextType.CODE),
+                TextNode("**b** ale i ", TextType.NORMAL),
+                TextNode("c", TextType.CODE),
+            ],
+        )
 
 
 if __name__ == "__main__":
