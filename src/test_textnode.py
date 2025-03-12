@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, text_node_to_html_node
 
 
 class TestTextNode(unittest.TestCase):
@@ -43,6 +43,14 @@ class TestTextNode(unittest.TestCase):
             node.__repr__(),
             "TextNode(self.text='Some text', self.text_type.value='bold', self.url='www.google.com')",
         )
+
+    def test_text_node_to_html_node(self):
+        text_node1 = TextNode("Normal text", TextType.NORMAL)
+        html_node1 = text_node_to_html_node(text_node1)
+        self.assertEqual(html_node1.tag, None)
+        self.assertEqual(html_node1.value, "Normal text")
+        self.assertEqual(html_node1.children, None)
+        self.assertEqual(html_node1.props, None)
 
 
 if __name__ == "__main__":
