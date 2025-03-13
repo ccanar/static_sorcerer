@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 from leafnode import LeafNode
 
@@ -79,8 +80,18 @@ def split_nodes_delimeter(
                 continue
             if i == 0 or i % 2 == 0:
                 result.append(TextNode(split_at_delimeter[i], TextType.NORMAL))
-            # if i % 2 == 0:
-            # result.append(TextNode(split_at_delimeter[i], TextType.NORMAL))
             else:
                 result.append(TextNode(split_at_delimeter[i], text_type))
     return result
+
+
+def extract_markdown_images(raw_text: str) -> list[tuple[str, str]]:
+    text = raw_text
+    match = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return match
+
+
+def extract_markdown_links(raw_text: str) -> list[tuple[str, str]]:
+    text = raw_text
+    match = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return match

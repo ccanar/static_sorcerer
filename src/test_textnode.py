@@ -1,6 +1,12 @@
 import unittest
-
-from textnode import TextNode, TextType, split_nodes_delimeter, text_node_to_html_node
+from textnode import (
+    TextNode,
+    TextType,
+    split_nodes_delimeter,
+    text_node_to_html_node,
+    extract_markdown_images,
+    extract_markdown_links,
+)
 
 
 class TestTextNode(unittest.TestCase):
@@ -120,6 +126,56 @@ class TestTextNode(unittest.TestCase):
                 TextNode("c", TextType.CODE),
             ],
         )
+
+    def test_extract_markdown_images(self):
+        md_txt1 = ""
+        md_txt2 = "There is no image in this bitch"
+        md_txt3 = "This one is a bait [bait](baiting more)"
+        md_txt4 = "Here is an image, tho ![THE IMAGE](https://the.image.com/theimage2)"
+        md_txt5 = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        md_txt6 = "Ohh, a bait! ![Trololo]"
+        md_txt7 = "Ohh, a bait v2! ![Trololo]()"
+        self.assertEqual(extract_markdown_images(md_txt1), [])
+        self.assertEqual(extract_markdown_images(md_txt2), [])
+        self.assertEqual(extract_markdown_images(md_txt3), [])
+        self.assertEqual(
+            extract_markdown_images(md_txt4),
+            [("THE IMAGE", "https://the.image.com/theimage2")],
+        )
+        self.assertEqual(
+            extract_markdown_images(md_txt5),
+            [
+                ("rick roll", "https://i.imgur.com/aKaOqIh.gif"),
+                ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg"),
+            ],
+        )
+        self.assertEqual(extract_markdown_images(md_txt6), [])
+        self.assertEqual(extract_markdown_images(md_txt7), [("Trololo", "")])
+
+    def test_extract_markdown_links(self):
+        md_txt1 = ""
+        md_txt2 = "There is no image in this bitch"
+        md_txt3 = "This one is a bait [bait](baiting more)"
+        md_txt4 = "Here is an image, tho [THE IMAGE](https://the.image.com/theimage2)"
+        md_txt5 = "This is text with a [rick roll](https://i.imgur.com/aKaOqIh.gif) and [obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        md_txt6 = "Ohh, a bait! [Trololo]"
+        md_txt7 = "Ohh, a bait v2! [Trololo]()"
+        self.assertEqual(extract_markdown_links(md_txt1), [])
+        self.assertEqual(extract_markdown_links(md_txt2), [])
+        self.assertEqual(extract_markdown_links(md_txt3), [("bait", "baiting more")])
+        self.assertEqual(
+            extract_markdown_links(md_txt4),
+            [("THE IMAGE", "https://the.image.com/theimage2")],
+        )
+        self.assertEqual(
+            extract_markdown_links(md_txt5),
+            [
+                ("rick roll", "https://i.imgur.com/aKaOqIh.gif"),
+                ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg"),
+            ],
+        )
+        self.assertEqual(extract_markdown_links(md_txt6), [])
+        self.assertEqual(extract_markdown_links(md_txt7), [("Trololo", "")])
 
 
 if __name__ == "__main__":
