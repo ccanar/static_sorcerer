@@ -3,6 +3,8 @@ from textnode import (
     TextNode,
     TextType,
     split_nodes_delimeter,
+    split_nodes_images,
+    split_nodes_links,
     text_node_to_html_node,
     extract_markdown_images,
     extract_markdown_links,
@@ -135,6 +137,7 @@ class TestTextNode(unittest.TestCase):
         md_txt5 = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         md_txt6 = "Ohh, a bait! ![Trololo]"
         md_txt7 = "Ohh, a bait v2! ![Trololo]()"
+        md_txt8 = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and [obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         self.assertEqual(extract_markdown_images(md_txt1), [])
         self.assertEqual(extract_markdown_images(md_txt2), [])
         self.assertEqual(extract_markdown_images(md_txt3), [])
@@ -151,6 +154,10 @@ class TestTextNode(unittest.TestCase):
         )
         self.assertEqual(extract_markdown_images(md_txt6), [])
         self.assertEqual(extract_markdown_images(md_txt7), [("Trololo", "")])
+        self.assertEqual(
+            extract_markdown_images(md_txt8),
+            [("rick roll", "https://i.imgur.com/aKaOqIh.gif")],
+        )
 
     def test_extract_markdown_links(self):
         md_txt1 = ""
@@ -160,6 +167,7 @@ class TestTextNode(unittest.TestCase):
         md_txt5 = "This is text with a [rick roll](https://i.imgur.com/aKaOqIh.gif) and [obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         md_txt6 = "Ohh, a bait! [Trololo]"
         md_txt7 = "Ohh, a bait v2! [Trololo]()"
+        md_txt8 = "Normal text with [normal link](https://normal.link)"
         self.assertEqual(extract_markdown_links(md_txt1), [])
         self.assertEqual(extract_markdown_links(md_txt2), [])
         self.assertEqual(extract_markdown_links(md_txt3), [("bait", "baiting more")])
@@ -176,6 +184,122 @@ class TestTextNode(unittest.TestCase):
         )
         self.assertEqual(extract_markdown_links(md_txt6), [])
         self.assertEqual(extract_markdown_links(md_txt7), [("Trololo", "")])
+        self.assertEqual(
+            extract_markdown_links(md_txt8), [("normal link", "https://normal.link")]
+        )
+
+    def test_split_nodes_images(self):
+        list1 = [
+            TextNode("THIS WAS BOLD", TextType.BOLD),
+            TextNode("This has **bold** text and some `code, too`.", TextType.NORMAL),
+            TextNode("some code", TextType.CODE),
+            TextNode("**b** ale i `c`", TextType.NORMAL),
+        ]
+        self.assertEqual(
+            split_nodes_images(list1),
+            [
+                TextNode("THIS WAS BOLD", TextType.BOLD),
+                TextNode(
+                    "This has **bold** text and some `code, too`.", TextType.NORMAL
+                ),
+                TextNode("some code", TextType.CODE),
+                TextNode("**b** ale i `c`", TextType.NORMAL),
+            ],
+        )
+
+        list2 = [
+            TextNode(
+                "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+                TextType.NORMAL,
+            )
+        ]
+
+        split_nodes1 = split_nodes_images(list2)
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.NORMAL),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.NORMAL),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            split_nodes1,
+        )
+        list3 = [
+            TextNode(
+                "This is text with an [image](https://i.imgur.com/zjjcJKZ.png) and another [second image](https://i.imgur.com/3elNhQu.png)",
+                TextType.NORMAL,
+            )
+        ]
+
+        split_nodes2 = split_nodes_images(list3)
+        self.assertListEqual(
+            [
+                TextNode(
+                    "This is text with an [image](https://i.imgur.com/zjjcJKZ.png) and another [second image](https://i.imgur.com/3elNhQu.png)",
+                    TextType.NORMAL,
+                )
+            ],
+            split_nodes2,
+        )
+
+        list4 = [
+            TextNode(
+                "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another [second image](https://i.imgur.com/3elNhQu.png)",
+                TextType.NORMAL,
+            )
+        ]
+
+        split_nodes3 = split_nodes_images(list4)
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.NORMAL),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(
+                    " and another [second image](https://i.imgur.com/3elNhQu.png)",
+                    TextType.NORMAL,
+                ),
+            ],
+            split_nodes3,
+        )
+
+        list5 = [
+            TextNode(
+                "This is text with an ![](https://i.imgur.com/zjjcJKZ.png) and another [second image](https://i.imgur.com/3elNhQu.png)",
+                TextType.NORMAL,
+            )
+        ]
+
+        split_nodes4 = split_nodes_images(list5)
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.NORMAL),
+                TextNode("", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(
+                    " and another [second image](https://i.imgur.com/3elNhQu.png)",
+                    TextType.NORMAL,
+                ),
+            ],
+            split_nodes4,
+        )
+
+    def test_split_nodes_links(self):
+        list = [
+            TextNode("Bold", TextType.BOLD),
+            TextNode(
+                "Normal text with [normal link](https://normal.link)",
+                TextType.NORMAL,
+            ),
+        ]
+        self.assertEqual(
+            split_nodes_links(list),
+            [
+                TextNode("Bold", TextType.BOLD),
+                TextNode("Normal text with ", TextType.NORMAL),
+                TextNode("normal link", TextType.LINK, "https://normal.link"),
+            ],
+        )
 
 
 if __name__ == "__main__":

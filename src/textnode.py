@@ -61,6 +61,14 @@ def text_node_to_html_node(text_node: TextNode):
                 raise Exception("url is None")
 
 
+def extract_markdown_images(raw_text: str) -> list[tuple[str, str]]:
+    return re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", raw_text)
+
+
+def extract_markdown_links(raw_text: str) -> list[tuple[str, str]]:
+    return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", raw_text)
+
+
 def split_nodes_delimeter(
     old_nodes: list[TextNode], delimeter: str, text_type: TextType
 ) -> list[TextNode]:
@@ -85,13 +93,62 @@ def split_nodes_delimeter(
     return result
 
 
-def extract_markdown_images(raw_text: str) -> list[tuple[str, str]]:
-    text = raw_text
-    match = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-    return match
+def split_nodes_images(old_nodes: list[TextNode]):
+    result: list[TextNode] = []
+    for node in old_nodes:
+        if node.text_type != TextType.NORMAL:
+            result.append(node)
+            continue
+
+        found_images = extract_markdown_images(node.text)
+
+        if len(found_images) == 0:
+            result.append(node)
+            continue
+
+        text = node.text
+
+        for i in range(len(found_images)):
+            split_text = text.split(f"![{found_images[i][0]}]({found_images[i][1]})", 1)
+            if split_text[0] != "":
+                result.append(TextNode(split_text[0], TextType.NORMAL))
+            result.append(
+                TextNode(found_images[i][0], TextType.IMAGE, found_images[i][1])
+            )
+            if i == len(found_images) - 1:
+                if split_text[1] != "":
+                    result.append(TextNode(split_text[1], TextType.NORMAL))
+            else:
+                if split_text[1] != "":
+                    text = split_text[1]
+    return result
 
 
-def extract_markdown_links(raw_text: str) -> list[tuple[str, str]]:
-    text = raw_text
-    match = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-    return match
+def split_nodes_links(old_nodes: list[TextNode]):
+    result: list[TextNode] = []
+    for node in old_nodes:
+        if node.text_type != TextType.NORMAL:
+            result.append(node)
+            continue
+
+        found_links = extract_markdown_links(node.text)
+
+        if len(found_links) == 0:
+            result.append(node)
+            continue
+
+        text = node.text
+
+        for i in range(len(found_links)):
+            split_text = text.split(f"[{found_links[i][0]}]({found_links[i][1]})", 1)
+            if split_text[0] != "":
+                result.append(TextNode(split_text[0], TextType.NORMAL))
+            result.append(TextNode(found_links[i][0], TextType.LINK, found_links[i][1]))
+            text = split_text[1]
+            if i == len(found_links) - 1:
+                if split_text[1] != "":
+                    result.append(TextNode(split_text[1], TextType.NORMAL))
+            else:
+                if split_text[1] != "":
+                    text = split_text[1]
+    return result
