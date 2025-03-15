@@ -4,7 +4,7 @@ from parentnode import ParentNode
 from leafnode import LeafNode
 
 
-class TestParentNode(unittest.TestCase):
+class test_parent_node(unittest.TestCase):
     def test_to_html_with_child(self):
         child_node = LeafNode("span", "child")
         parent_node = ParentNode("div", [child_node])

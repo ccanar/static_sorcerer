@@ -17,16 +17,16 @@ class TestHTMLNode(unittest.TestCase):
 
     def test_parameters(self):
         node = HTMLNode(
-            "p", 
-            " There is something BOLD in here ", 
+            "p",
+            " There is something BOLD in here ",
             [HTMLNode("b", "BOLD BOI")],
-            { "style": "text-align:left" },
-            )
-        
+            {"style": "text-align:left"},
+        )
+
         self.assertEqual(node.tag, "p")
         self.assertEqual(node.value, " There is something BOLD in here ")
         self.assertEqual(node.children, [HTMLNode("b", "BOLD BOI")])
-        self.assertEqual(node.props, { "style": "text-align:left" })
+        self.assertEqual(node.props, {"style": "text-align:left"})
 
     def test_repr(self):
         n1 = HTMLNode(None, "Just plain text")

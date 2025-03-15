@@ -3,7 +3,7 @@ import unittest
 from leafnode import LeafNode
 
 
-class TestLeafNode(unittest.TestCase):
+class test_leaf_node(unittest.TestCase):
     def test_to_html(self):
         ln1 = LeafNode(None, "There is no tag")
         ln2 = LeafNode("p", "There is a P!")
