@@ -1,5 +1,11 @@
 import unittest
-from block_markdown import BlockType, markdown_to_blocks, block_to_block_type
+from block_markdown import (
+    BlockType,
+    markdown_to_blocks,
+    block_to_block_type,
+    markdown_to_html_node,
+    extract_title,
+)
 
 
 class test_block_markdown(unittest.TestCase):
@@ -163,6 +169,50 @@ Ends bad"""
         self.assertNotEqual(block_to_block_type(text3), BlockType.PARAGRAPH)
         self.assertNotEqual(block_to_block_type(text4), BlockType.PARAGRAPH)
         self.assertNotEqual(block_to_block_type(text5), BlockType.PARAGRAPH)
+
+    def test_markdown_to_html_node(self):
+        text = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+This is another paragraph with _italic_ text and `code` here
+
+```
+Here is some code text
+and code
+and and
+lol
+```
+
+- Uno
+- Dos
+- Tres
+
+
+> This is a quote
+> And another on
+> This is a quote
+> And another onee
+
+1. Raz
+2. Dwa
+3. Trzy
+"""
+        self.assertEqual(
+            markdown_to_html_node(text).to_html(),
+            "<div><p>This is <b>bolded</b> paragraph\ntext in a p\ntag here</p><p>\
+This is another paragraph with <i>italic</i> text and <code>code</code> here</p><code>\nHere is some code text\n\
+and code\nand and\nlol\n</code><ul><li>Uno</li><li>Dos</li><li>Tres</li></ul>\
+<blockquote>This is a quote</blockquote><blockquote>And another on</blockquote><blockquote>This is a quote</blockquote>\
+<blockquote>And another onee</blockquote><ol><li>Raz</li><li>Dwa</li><li>Trzy</li></ol></div>",
+        )
+
+    def test_extract_title(self):
+        text1 = "# This is a title"
+        text2 = "#    Test   "
+        self.assertEqual(extract_title(text1), "This is a title")
+        self.assertEqual(extract_title(text2), "Test")
 
 
 if __name__ == "__main__":

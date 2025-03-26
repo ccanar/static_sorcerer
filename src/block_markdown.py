@@ -1,5 +1,12 @@
 from enum import Enum
 
+from htmlnode import HTMLNode
+from inline_markdown import text_to_textnodes
+from leafnode import LeafNode
+from parentnode import ParentNode
+from test_textnode import test_text_node
+from textnode import text_node_to_html_node
+
 
 class BlockType(Enum):
     PARAGRAPH = ("paragraph",)
@@ -60,3 +67,57 @@ def block_to_block_type(markdown_text: str) -> BlockType:
             return BlockType.ORDERED_LIST
 
     return BlockType.PARAGRAPH
+
+
+def markdown_to_html_node(markdown_text: str) -> ParentNode:
+    markdown_blocks = markdown_to_blocks(markdown_text)
+    block_list = []
+    for block in markdown_blocks:
+        block_type = block_to_block_type(block)
+        match block_type:
+            case BlockType.CODE:
+                block_list.append(LeafNode("code", block.strip("```").rstrip("```")))
+            case BlockType.QUOTE:
+                block_list.extend(
+                    [LeafNode("blockquote", x.strip("> ")) for x in block.splitlines()]
+                )
+            case BlockType.ORDERED_LIST:
+                block_list.append(
+                    ParentNode(
+                        "ol",
+                        [
+                            LeafNode("li", x[x.find(" ") + 1 :])
+                            for x in block.splitlines()
+                        ],
+                    )
+                )
+            case BlockType.UNORDERED_LIST:
+                block_list.append(
+                    ParentNode(
+                        "ul", [LeafNode("li", x[2:]) for x in block.splitlines()]
+                    )
+                )
+            case BlockType.HEADING:
+                lines = block.splitlines()
+                number_of_symbols = lines[:6].count("#")
+                for line in lines:
+                    block_list.append(
+                        LeafNode(f"h{number_of_symbols}", line[number_of_symbols + 1 :])
+                    )
+            case BlockType.PARAGRAPH:
+                block_list.append(
+                    ParentNode(
+                        "p",
+                        [text_node_to_html_node(x) for x in text_to_textnodes(block)],
+                    )
+                )
+    output = ParentNode("div", block_list, None)
+    return output
+
+
+def extract_title(markdown_text: str) -> str:
+    lines = markdown_text.splitlines()
+    for line in lines:
+        if line.startswith("# "):
+            return line.strip("# ").strip()
+    raise Exception("No title found in markdown")
