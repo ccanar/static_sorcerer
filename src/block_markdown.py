@@ -36,7 +36,7 @@ def block_to_block_type(markdown_text: str) -> BlockType:
     elif markdown_text.startswith("```") and markdown_text.endswith("```"):
         return BlockType.CODE
 
-    line_list = markdown_text.splitlines()
+    line_list = markdown_text.split("\n")
     if markdown_text.startswith(">"):
         all_lines_proper_start = True
         for line in line_list:
@@ -76,34 +76,47 @@ def markdown_to_html_node(markdown_text: str) -> ParentNode:
         block_type = block_to_block_type(block)
         match block_type:
             case BlockType.CODE:
-                block_list.append(LeafNode("code", block.strip("```").rstrip("```")))
+                block_list.append(LeafNode("code", block.strip("```")))
+
             case BlockType.QUOTE:
-                block_list.extend(
-                    [LeafNode("blockquote", x.strip("> ")) for x in block.splitlines()]
-                )
-            case BlockType.ORDERED_LIST:
-                block_list.append(
-                    ParentNode(
-                        "ol",
-                        [
-                            LeafNode("li", x[x.find(" ") + 1 :])
-                            for x in block.splitlines()
-                        ],
-                    )
-                )
-            case BlockType.UNORDERED_LIST:
-                block_list.append(
-                    ParentNode(
-                        "ul", [LeafNode("li", x[2:]) for x in block.splitlines()]
-                    )
-                )
-            case BlockType.HEADING:
-                lines = block.splitlines()
-                number_of_symbols = lines[:6].count("#")
+                lines = block.splitlines(True)
+                stripped = ""
                 for line in lines:
-                    block_list.append(
-                        LeafNode(f"h{number_of_symbols}", line[number_of_symbols + 1 :])
-                    )
+                    stripped += line.lstrip("> ")
+                block_list.append(LeafNode("blockquote", stripped))
+
+            case BlockType.ORDERED_LIST:
+                omega_parent = ParentNode("ol", [])   
+                block_in_lines = block.splitlines()
+                for line in block_in_lines:
+                    child = ParentNode("li", [])
+                    child_text_nodes = text_to_textnodes(line[line.find(" ") + 1 :])
+                    for text_node in child_text_nodes:
+                        child.children.append(text_node_to_html_node(text_node))
+                    omega_parent.children.append(child)
+                block_list.append(omega_parent)
+
+            case BlockType.UNORDERED_LIST:
+                omega_parent = ParentNode("ul", [])   
+                block_in_lines = block.splitlines()
+                for line in block_in_lines:
+                    child = ParentNode("li", [])
+                    child_text_nodes = text_to_textnodes(line[line.find(" ") + 1:])
+                    for text_node in child_text_nodes:
+                        child.children.append(text_node_to_html_node(text_node))
+                    omega_parent.children.append(child)
+                block_list.append(omega_parent)
+
+            case BlockType.HEADING:
+                block_in_lines = block.splitlines()
+                for line in block_in_lines:
+                    number_of_symbols = line[:line.find(" ")].count('#')
+                    child = ParentNode(f"h{number_of_symbols}", [])
+                    child_text_nodes = text_to_textnodes(line[line.find(" ") + 1:])
+                    for text_node in child_text_nodes:
+                        child.children.append(text_node_to_html_node(text_node))
+                    block_list.append(child)
+
             case BlockType.PARAGRAPH:
                 block_list.append(
                     ParentNode(
@@ -116,7 +129,7 @@ def markdown_to_html_node(markdown_text: str) -> ParentNode:
 
 
 def extract_title(markdown_text: str) -> str:
-    lines = markdown_text.splitlines()
+    lines = markdown_text.split("\n")
     for line in lines:
         if line.startswith("# "):
             return line.strip("# ").strip()
